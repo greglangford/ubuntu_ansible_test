@@ -1,0 +1,50 @@
+---
+  - hosts: ubuntu_servers
+    vars:
+      ssh_port: 22
+      packages:
+        - aptitude
+        - ufw
+
+    become: true
+    become_user: root
+    become_method: sudo
+
+    tasks:
+      - name: Update apt cache
+        apt: update_cache=true
+
+      - name: Install packages
+        apt: state=installed pkg={{ item }}
+        with_items: "{{ packages }}"
+
+      - name: Upgrade packages (safe)
+        apt: upgrade=safe
+
+      - name: Allow SSH traffic
+        ufw: rule=allow port={{ ssh_port }} proto=tcp
+
+      - name: Enable UFW set default policy to deny
+        ufw: state=enabled policy=deny
+
+      - name: Restart node
+        shell: sleep 2 && reboot
+        async: 1
+        poll: 0
+        sudo: true
+        ignore_errors: true
+
+      - name: Waiting for node to come back online
+        local_action:
+          module: wait_for
+            host={{ inventory_hostname }}
+            port=22
+            delay=1
+            timeout=300
+
+      - shell: uptime
+        changed_when: False
+        register: uptime
+
+      - name: Show system uptime
+        debug: var=uptime.stdout
