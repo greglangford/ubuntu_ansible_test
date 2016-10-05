@@ -1,4 +1,4 @@
-# H1 Provision remote Ubuntu node with Ansible example
+# Provision remote Ubuntu node with Ansible example
 This repo will provision a remote Ubuntu node with the following.
 1. Update apt cache
 2. Install a list of packages defined in variable 'packages' within playbook.yml
